@@ -1,0 +1,12 @@
+{
+  "name": "AppContact",
+  "displayName": "AppContact",
+  "expo": {
+    "name": "AppContact",
+    "slug": "AppContact",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
