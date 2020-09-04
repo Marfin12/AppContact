@@ -1,19 +1,22 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, View, Modal } from "react-native";
 
-const App = ({isVisible}) => (
-<Modal transparent={true} animationType={'none'} visible={isVisible}>
+function App(props) {
+return (
+<Modal transparent={true} animationType={'none'} visible={props.isVisible}>
   <View style={[styles.container]}>
     <ActivityIndicator size="large" color="#000000"/>
   </View>
   </Modal>
 );
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor:'rgba(4,0,0,0.8)'
+    backgroundColor:'rgba(4,0,0,0.8)',
+    zIndex: 1000
   },
   horizontal: {
     flexDirection: "row",

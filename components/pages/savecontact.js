@@ -1,26 +1,67 @@
 import React, {Component} from 'react';
-import { StyleSheet, Button, View, SafeAreaView, Text,TextInput, TouchableHighlight, Image} from 'react-native';
+import { StyleSheet, Button, View, SafeAreaView,Alert, Text,TextInput, TouchableHighlight, TouchableOpacity, Image} from 'react-native';
 import {postContact,getContact,getContactById,deleteContact,editContact} from '../redux/action';
 import {connect} from 'react-redux';
-import { Appbar } from 'react-native-paper';
-import myImage from '../images/imageanalysis.png';
 import uploadimage from '../images/uploadsample.png';
 import { Icon } from 'react-native-elements';
-
+import Modal from 'react-native-modal';
+import Loading from '../modal/loader';
 
 class SaveContact extends Component {
-    constructor() {
-      super();
+    constructor(props) {
+      super(props);
       this.state = {
          value: '',
          loading: false,
-         profile: []
+         profile: [],
+         count: 0,
+         visibleModal: false
       };
     }
 
+    goback() {
+      this.props.navigation.replace('Contact')
+    }
+
+    componentDidMount() {
+      this.setState({
+        profile: {
+          firstname: '',
+          lastname: '',
+          age: '',
+          photo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png'
+        }
+      })
+      this.props.navigation.setOptions({
+        headerRight: () => (
+          <Button onPress={() => this.postContact()} title="Save" />
+        ),
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => this.goback()}>
+          <Icon
+            name='arrow-back'
+            color='#00aced'/>
+          </TouchableOpacity>
+        ),
+      });
+    }
+
+    isValidName(name) {
+       return name !== undefined && name !== '' && /([A-Z]+)/g.test(name)
+    }
+
+    isValidAge(age) {
+      return !isNaN(age) && parseInt(age) < 90;
+    }
+
     postContact() {
-        this.setState({loading: true})
-        this.asyncPostContact()
+        if (!this.isValidName(this.state.profile.firstname)) Alert.alert('please input your firstname')
+        else if (!this.isValidName(this.state.profile.lastname)) Alert.alert('please input your lastname')
+        else if (!this.isValidAge(this.state.profile.age)) Alert.alert('please input your age correctly and no more than or equal 90')
+        else {
+          this.setState({loading: true})
+          this.asyncPostContact()
+        }
     }
 
       async asyncPostContact() {
@@ -28,18 +69,11 @@ class SaveContact extends Component {
         this.props.postContact(firstname,lastname,age,photo)
         .then(() => {
           try {
-            let status = this.props.items.data.status;
-            let detail = this.props.items.data.detail;
-            let response_time = this.props.items.data.response_time;
-            //console.log(this.props)
-            if (this.props.items.status === 200) {
-              //console.log(this.props.items.data["data"][0].firstName)
-              let response = this.props.items.data;
-              this.setState({profile: response.data, loading: false});
-              alert("Contact has been saved!")
+            if (this.props.items.status === 200 || this.props.items.status === 201) {
+              this.setState({loading: false});
+              this.props.navigation.replace('Contact')
             } else {
               this.setState({
-                profile: [],
                 loading: false
               });
             }
@@ -49,26 +83,42 @@ class SaveContact extends Component {
         });
     }
 
+    _renderButton = (text, onPress) => (
+      <TouchableOpacity onPress={onPress}>
+        <View style={styles.button}>
+          <Text>{text}</Text>
+        </View>
+      </TouchableOpacity>
+    );
+
 render() {
     return (
   <SafeAreaView style={styles.container}>
-      <Appbar style={styles.topbar}>
-      </Appbar>
-      <Appbar style={styles.downbar}>
-      <Text style={styles.contact}>{'<'}</Text>
-      <View style={styles.savecontact}>
-      <TouchableOpacity onPress={this.postContact}>
-        <Text>Save</Text>
-      </TouchableOpacity>
-      </View>
-      </Appbar>
+    <Loading isVisible={this.state.loading}/>
+    <Modal isVisible={this.state.visibleModal}>
+          <View style={styles.modalContent}>
+      <Text>Enter url: </Text>
+      <TextInput
+      style={styles.fieldInput}
+      value={this.state.profile.photo}
+      onChangeText={text => this.setState({
+        profile: {
+          ...this.state.profile,
+          photo: text
+        }
+      })}
+      placeholder='https://image.shutterstock.com/image-vector/example-stamp-vector-template-illustration-260nw-1362869099.jpg'
+    />
+      {this._renderButton('Close', () => this.setState({ visibleModal: false }))}
+    </View>
+        </Modal>
       <View style={styles.formMenu}>
       <TouchableHighlight
           style={[styles.profileImgContainer, { marginVertical: 70 }]}
         >
-    <Image source={myImage} style={styles.profileImg} />
+    <Image source={{uri: this.state.profile.photo}} style={styles.profileImg} />
     </TouchableHighlight>
-    <TouchableHighlight
+    <TouchableHighlight onPress={() => this.setState({visibleModal: true})}
           style={styles.uploadImg}
         >
     <Image source={uploadimage} style={styles.profileUpload} />
@@ -80,7 +130,13 @@ render() {
   style={styles.icon} />
       <TextInput
       style={styles.fieldInput}
-      value={this.state.value}
+      value={this.state.profile.firstname}
+      onChangeText={text => this.setState({
+        profile: {
+          ...this.state.profile,
+          firstname: text
+        }
+      })}
       placeholder=' First Name'
     />
     </View>
@@ -91,7 +147,13 @@ render() {
   style={styles.icon} />
     <TextInput
       style={styles.fieldInput}
-      value={this.state.value}
+      value={this.state.profile.lastname}
+      onChangeText={text => this.setState({
+        profile: {
+          ...this.state.profile,
+          lastname: text
+        }
+      })}
       placeholder=' Last Name'
     />
     </View>
@@ -102,7 +164,13 @@ render() {
   style={styles.icon}/>
     <TextInput
       style={styles.fieldInput}
-      value={this.state.value}
+      value={this.state.profile.age}
+      onChangeText={text => this.setState({
+        profile: {
+          ...this.state.profile,
+          age: text
+        }
+      })}
       placeholder=' Age'
     />
     </View>
@@ -130,6 +198,14 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         borderBottomWidth: 1,
         borderBottomColor: 'gray',
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      padding: 22,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 4,
+      borderColor: 'rgba(0, 0, 0, 0.1)',
     },
     contact: {
         

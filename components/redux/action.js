@@ -26,11 +26,15 @@ export const postContact = (firstname, lastname, age, photo) => {
           photo: photo
         }),
       })
-        .then(response => response.json())
+      .then(response => (
+        mystatus = response.status,
+        response.json()
+    ))
         .then(response =>
           dispatch({
             type: RECEIVE_CONTACT,
             payload: response,
+            status: mystatus
           }),
         )
         .catch(response =>
@@ -91,11 +95,15 @@ export const postContact = (firstname, lastname, age, photo) => {
           'Content-Type': 'application/json',
         },
       })
-        .then(response => response.json())
+      .then(response => (
+        mystatus = response.status,
+        response.json()
+    ))
         .then(response =>
           dispatch({
             type: RECEIVE_CONTACT,
             payload: response,
+            status: mystatus
           }),
         )
         .catch(response =>
@@ -150,17 +158,21 @@ export const postContact = (firstname, lastname, age, photo) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          firstname: firstname,
-          lastname: lastname,
+          firstName: firstname,
+          lastName: lastname,
           age: age,
           photo: photo
         }),
       })
-        .then(response => response.json())
+      .then(response => (
+        mystatus = response.status,
+        response.json()
+    ))
         .then(response =>
           dispatch({
             type: RECEIVE_CONTACT,
             payload: response,
+            status: mystatus
           }),
         )
         .catch(response =>

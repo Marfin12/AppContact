@@ -1,20 +1,27 @@
-import React, {Component} from 'react';
-import { StyleSheet, View, Text, TouchableHighlight, Image } from 'react-native';
-import {postContact,getContact,getContactById,deleteContact,editContact} from '../redux/action';
-import {connect} from 'react-redux';
-import Loader from '../modal/loader';
-import { Appbar } from 'react-native-paper';
+import React, {Component, useState} from 'react';
+import { StyleSheet, View, Text, TouchableHighlight, Image, TouchableOpacity } from 'react-native';
 
 const App = (props) => {
+    const [error, setError] = useState(false)
+    const handleErrorPhoto = () => {
+      setError(true)
+    }
     return (
-  <View style={styles.container}>
+  <TouchableOpacity style={styles.container} onPress={props.onGetItem.bind(props,props.itemKey)}>
       <TouchableHighlight
           style={styles.profileImgContainer}
         >
-    <Image source={props.image} style={styles.profileImg} />
+    <Image 
+    onError={() => handleErrorPhoto()} 
+    source={!error?{uri: props.image}:{uri: props.errorPhoto}}
+    style={styles.profileImg} 
+    />
     </TouchableHighlight>
-      <Text style={styles.item} onPress={props.onGetItem.bind(props,props.itemKey)} > {props.itemKey} </Text>
-  </View>
+    <View>
+      <Text style={styles.firstname}  > {props.firstname} </Text>
+      <Text style={styles.lastname} > {props.lastname} </Text>
+      </View>
+  </TouchableOpacity>
     )
 }
 
@@ -23,11 +30,17 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row'
   },
-  item: {
-    padding: 10,
+  firstname: {
+    paddingLeft: 10,
+    paddingTop: 10,
     fontSize: 18,
     height: 44,
-    marginVertical: 16
+  },
+  lastname: {
+    paddingLeft: 10,
+    paddingBottom: 15,
+    fontSize: 14,
+    color: 'gray'
   },
   profileImgContainer: {
     marginLeft: 8,
@@ -44,14 +57,3 @@ const styles = StyleSheet.create({
 });
 
   export default App;
-  /*<Button
-  title="Press me"
-  onPress={() => this.getContact()}
-/>
- profile: {
-            firstname: 'andy',
-            lastname: 'wick',
-            age: 10,
-            photo: "N/A"
-         }
-*/

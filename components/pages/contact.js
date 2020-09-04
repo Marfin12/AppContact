@@ -1,11 +1,10 @@
 import React, {Component} from 'react';
-import { StyleSheet, Button, View, SafeAreaView, Text,FlatList, Alert, TouchableOpacity} from 'react-native';
-import {postContact,getContact,getContactById,deleteContact,editContact} from '../redux/action';
+import { StyleSheet, RefreshControl, View, SafeAreaView, Text,FlatList, TouchableOpacity} from 'react-native';
+import {getContact,getContactById,deleteContact,editContact} from '../redux/action';
 import {connect} from 'react-redux';
-import { Appbar } from 'react-native-paper';
 import ContactDetail from '../modal/contactdetail';
 import ContactList from '../pages/contactlist';
-import myImage from '../images/imageanalysis.png';
+import Loading from '../modal/loader';
 
 class Contact extends Component {
     constructor() {
@@ -13,100 +12,37 @@ class Contact extends Component {
       this.state = {
          value: '',
          loading: false,
+         refreshing: false,
          profile: [],
-         openModal: false
+         openModal: false,
+         errorPhoto: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/1024px-No_image_available.svg.png',
+         curProfile: []
       };
     }
 
-    deleteContact() {
-        this.setState({loading: true})
-        this.asyncDeleteContact()
+    componentWillMount() {
+      console.log("test")
     }
 
-    editContact() {
-        this.setState({loading: true})
-        this.asyncEditContact()
+    componentDidMount() {
+      this.getContact()
     }
 
-    getContactById() {
-        this.setState({loading: true})
-        this.asyncGetContactById()
+    wait = (timeout) => {
+      return new Promise(resolve => {
+        setTimeout(resolve, timeout);
+      });
+    }
+
+    async onRefresh() {
+      this.setState({refreshing: true})
+      .then(() => {this.asyncGetContact()})
     }
 
     getContact() {
+      console.log("check")
         this.setState({loading: true})
         this.asyncGetContact()
-    }
-
-    async asyncDeleteContact() {
-        this.props.deleteContact(this.state.value)
-        .then(() => {
-          try {
-            let status = this.props.items.data.status;
-            let detail = this.props.items.data.detail;
-            let response_time = this.props.items.data.response_time;
-            if (this.props.items.status === 200) {
-              let response = this.props.items.data;
-              this.setState({profile: response.data, loading: false});
-            } else {
-              this.setState({
-                profile: [],
-                loading: false
-              });
-            }
-          } catch (error) {
-            console.log(error)
-          }
-        });
-    }
-
-    async asyncEditContact() {
-        let {firstname, lastname, age, photo} = this.state.profile
-        this.props.editContact(this.state.value,firstname,lastname,age,photo)
-        .then(() => {
-          try {
-            if (this.props.items.status === 200) {
-              //console.log(this.props.items.data["data"][0].firstName)
-              let response = this.props.items.data;
-              this.setState({profile: response.data, loading: false});
-            } else {
-              this.setState({
-                profile: [],
-                loading: false
-              });
-            }
-          } catch (error) {
-            console.log(error)
-          }
-        });
-    }
-
-    async asyncGetContactById() {
-        this.props.getContactById(this.state.value)
-        .then(() => {
-          try {
-            let status = this.props.items.data.status;
-            let detail = this.props.items.data.detail;
-            let response_time = this.props.items.data.response_time;
-            //console.log(this.props.items.data)
-            if (this.props.items.status === 200) {
-              //console.log(this.props.items.data["data"][0].firstName)
-              let response = this.props.items.data;
-              //console.log(response.data)
-              this.setState({profile: response.data, loading: false});
-            } else {
-              this.setState({
-                profile: [],
-                loading: false
-              });
-            }
-          } catch (error) {
-            this.setState({
-                profile: [],
-                loading: false
-              });
-          }
-        });
     }
 
     async asyncGetContact() {
@@ -114,13 +50,14 @@ class Contact extends Component {
           .then(() => {
             try {
               if (this.props.items.status === 200) {
-                //console.log(this.props.items.data["data"][0].firstName)
                 let response = this.props.items.data;
-                this.setState({profile: response.data, loading: false});
+                this.setState({profile: response.data, loading: false, refreshing: false});
               } else {
+                alert('oopss... something went wrong!')
                 this.setState({
                   profile: [],
-                  loading: false
+                  loading: false,
+                  refreshing: false
                 });
               }
             } catch (error) {
@@ -142,32 +79,56 @@ class Contact extends Component {
       }
 
       GetItem (item) {
+        console.log(item)
         this.setState({
-            openModal: true
+            openModal: true,
+            curProfile: {
+              firstName: item.firstName,
+              lastName: item.lastName,
+              age: item.age,
+              photo: item.photo,
+              key: item.id,
+              errorPhoto: this.state.errorPhoto
+            }
         })
-        }
+      }
+
+      closeModal() {
+        this.setState({openModal: false})
+        this.getContact()
+      }
 
 render() {
     return (
-  <SafeAreaView style={styles.container}>
-      <Appbar style={styles.topbar}>
-      </Appbar>
-      <Appbar style={styles.downbar}>
-        <Text style={styles.contact}>Contact</Text>
-      </Appbar>
-      <ContactDetail isVisible={this.state.openModal} onClose={() => this.setState({openModal: false})}/>
+  <View style={styles.container}>
+    <Loading isVisible={this.state.loading}/>
         <FlatList
           data={ this.state.profile }
+          refreshControl={
+            <RefreshControl refreshing={this.state.refreshing} onRefresh={this.onRefresh} />
+          }
           ItemSeparatorComponent = {this.FlatListItemSeparator}
-          style={styles.contactlist}
-          renderItem={({item}) => <ContactList itemKey={item.key} firstname={item.firstname} lastname={item.lastname} age={item.age} image={myImage} onGetItem={this.GetItem.bind(this, item.key)} />}
+          renderItem={({item}) => <ContactList itemKey={item.id} 
+            firstname={item.firstName} 
+            lastname={item.lastName} 
+            age={item.age} 
+            image={item.photo}
+            errorPhoto= {this.state.errorPhoto} 
+            onGetItem={this.GetItem.bind(this, item)} />}
          />
+    <ContactDetail 
+      isVisible={this.state.openModal} 
+      onClose={() => this.closeModal()} 
+      profile={this.state.curProfile} 
+    />
         <TouchableOpacity
-       style={styles.floatbutton}
+       style={styles.floatbutton} onPress={() => this.props.navigation.replace('Save Contact', {
+        onGoBack: () => this.getContact,
+      })}
     >
      <Text>+</Text>
   </TouchableOpacity>
-  </SafeAreaView>
+  </View>
     )
 }
 }
@@ -180,9 +141,6 @@ const styles = StyleSheet.create({
     },
     contact: {
 
-    },
-    contactlist: {
-        marginTop: 56
     },
     floatbutton: {
         borderWidth:1,
@@ -201,14 +159,12 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        marginVertical: 36
     },
   container: {
     flex: 1
   },
   title: {
     textAlign: 'center',
-    marginVertical: 8,
   },
   fixToText: {
     flexDirection: 'row',
@@ -229,16 +185,5 @@ function mapStateToProps(state) {
 
   export default connect(
     mapStateToProps,
-    {postContact,getContact,getContactById,deleteContact,editContact},
+    {getContact,getContactById,deleteContact,editContact},
   )(Contact);
-  /*<Button
-  title="Press me"
-  onPress={() => this.getContact()}
-/>
- profile: {
-            firstname: 'andy',
-            lastname: 'wick',
-            age: 10,
-            photo: "N/A"
-         }
-*/
