@@ -14,6 +14,7 @@ let middleware = applyMiddleware(thunk);
 
 const store = createStore(reducers, compose(middleware));
 
+// Screen Home
 function HomeScreen({ navigation }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
