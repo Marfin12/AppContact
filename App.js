@@ -13,7 +13,7 @@ import myImage from './components/images/uploadsample.png'
 let middleware = applyMiddleware(thunk);
 
 const store = createStore(reducers, compose(middleware));
-
+// solve please
 // Screen Home
 function HomeScreen({ navigation }) {
   return (
