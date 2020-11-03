@@ -8,7 +8,7 @@ import {
 } from './constant';
 
 let mystatus = '';
-
+// status addd
 export const postContact = (firstname, lastname, age, photo) => {
     return async function(dispatch) {
       dispatch({type: FETCH_CONTACT});
